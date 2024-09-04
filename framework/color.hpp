@@ -9,6 +9,7 @@
 #ifndef BUW_COLOR_HPP
 #define BUW_COLOR_HPP
 #include <iostream>
+#include <algorithm>
 struct Color
 {
     friend std::ostream& operator<<(std::ostream& os, Color const& c)
@@ -60,9 +61,13 @@ struct Color
     }
 
     // Multiplikation mit einer anderen Farbe (komponentenweise)
-    Color operator*(Color const& other) const
+    Color operator*(const Color& other) const
     {
-        return Color{ r * other.r, g * other.g, b * other.b };
+        return Color{
+            std::min(1.0f, r * other.r),
+            std::min(1.0f, g * other.g),
+            std::min(1.0f, b * other.b)
+        };
     }
 
     // Freund-Funktion für Multiplikation Skalar * Color
@@ -70,5 +75,6 @@ struct Color
     {
         return c * scalar;
     }
+
 };
 #endif //#define BUW_COLOR_HPP

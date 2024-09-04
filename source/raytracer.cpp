@@ -1,7 +1,6 @@
 
-#include <GL/glew.h>  // Stellen Sie sicher, dass dies der erste GL-bezogene Include ist
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
-// ... andere Includes ...
 #include <renderer.hpp>
 #include <window.hpp>
 #include <thread>
