@@ -216,8 +216,8 @@ int main(int argc, char* argv[])
         window.show(renderer.color_buffer());
     }
 
-    renderer.add_shapes(shapes);
-    renderer.add_lights(lights);
+    //renderer.add_shapes(shapes);
+    //renderer.add_lights(lights);
 
     std::cout << "Programm beendet." << std::endl;
     return 0;
