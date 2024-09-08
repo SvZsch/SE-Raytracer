@@ -66,6 +66,7 @@
 //
 //#endif // #ifndef BUW_RENDERER_HPP
 
+// renderer.hpp
 #ifndef BUW_RENDERER_HPP
 #define BUW_RENDERER_HPP
 
@@ -77,7 +78,7 @@
 #include "ray.hpp"
 #include "hitpoint.hpp"
 #include "camera.hpp"
-#include "shade.hpp"  // Neue Klasse für Shading
+#include "shade.hpp"
 #include <string>
 #include <glm/glm.hpp>
 #include <vector>
@@ -90,6 +91,7 @@ public:
     void write(Pixel const& p);
     inline std::vector<Color> const& color_buffer() const { return colorbuffer_; }
     void add_shapes(const std::vector<std::shared_ptr<Shape>>& new_shapes);
+    // renderer.hpp (Fortsetzung)
     void add_lights(const std::vector<std::shared_ptr<Light>>& new_lights);
 
 private:
@@ -99,14 +101,11 @@ private:
     std::string filename_;
     PpmWriter ppm_;
     Camera camera_;
-    Shading shading_;  // Neu: Shading-Objekt für Beleuchtung
-
+    Shading shading_;
     Ray generate_primary_ray(unsigned x, unsigned y);
     Color trace_ray(Ray const& ray, int depth);
-
-    std::vector<std::shared_ptr<Shape>> shapes_;
+    std::shared_ptr<Shape> root_shape_;  // Geändert von std::vector<std::shared_ptr<Shape>> shapes_
     std::vector<std::shared_ptr<Light>> lights_;
 };
 
 #endif // #ifndef BUW_RENDERER_HPP
-
