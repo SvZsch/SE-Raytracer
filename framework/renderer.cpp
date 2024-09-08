@@ -7,11 +7,6 @@
 //// Renderer
 //// -----------------------------------------------------------------------------
 //
-#include "renderer.hpp"
-//
-#include "shape.hpp"
-#include "camera.hpp"
-#include "shape.cpp"
 //#include "ray.hpp"
 //#include "hitpoint.hpp"
 //#include "light.hpp"
@@ -373,10 +368,18 @@
 //
 //    ppm_.write(p);
 //}
-
+// renderer.cpp
 #include "renderer.hpp"
+#include "shape.hpp"
+#include "camera.hpp"
+#include "renderer.hpp"
+#include "box.cpp"
+#include "sphere.hpp"
+#include "Hitpoint.hpp"
+#include "composite.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+#include <functional>
 
 Renderer::Renderer(unsigned w, unsigned h, std::string const& file, Camera const& cam)
     : width_(w)
@@ -385,68 +388,188 @@ Renderer::Renderer(unsigned w, unsigned h, std::string const& file, Camera const
     , filename_(file)
     , ppm_(w, h)
     , camera_(cam)
-    , shading_()  // Initialisierung von Shading
+    , shading_()
+    , root_shape_(std::make_shared<Composite>("root"))  // Initialisierung des root_shape_
 {}
 
 void Renderer::render() {
+    // Kameraeinstellungen ausgeben
+    std::cout << "Camera settings:" << std::endl;
+    std::cout << "  Position: (" << camera_.eye.x << ", " << camera_.eye.y << ", " << camera_.eye.z << ")" << std::endl;
+    std::cout << "  Direction: (" << camera_.dir.x << ", " << camera_.dir.y << ", " << camera_.dir.z << ")" << std::endl;
+    std::cout << "  Up vector: (" << camera_.up.x << ", " << camera_.up.y << ", " << camera_.up.z << ")" << std::endl;
+    std::cout << "  FOV: " << camera_.fov_x << std::endl;
+
+    
+    //auto sphereMaterial = std::make_shared<Material>();
+    //sphereMaterial->ka = Color(0.1f, 0.1f, 0.1f);
+    //sphereMaterial->kd = Color(0.7f, 0.0f, 0.0f);
+    //sphereMaterial->ks = Color(0.3f, 0.3f, 0.3f);
+    //sphereMaterial->m = 20.0f;
+
+    //auto boxMaterial = std::make_shared<Material>();
+    //boxMaterial->ka = Color(0.1f, 0.1f, 0.1f);
+    //boxMaterial->kd = Color(0.0f, 0.7f, 0.0f);
+    //boxMaterial->ks = Color(0.3f, 0.3f, 0.3f);
+    //boxMaterial->m = 20.0f;
+    //
+    //
+    //// Erstellen Sie die Shapes mit eindeutigen Positionen
+    //auto sphere = std::make_shared<Sphere>(1.5f, glm::vec3(0, 0, -5), "TestSphere", sphereMaterial);
+    //std::cout << "Created TestSphere: center = (0, 0, -5), radius = 1.5" << std::endl;
+
+    //auto box = std::make_shared<Box>(glm::vec3(-0.5, -0.5, -4), glm::vec3(0.5, 0.5, -3), "TestBox", boxMaterial);
+    //std::cout << "Created TestBox: min = (-0.5, -0.5, -4), max = (0.5, 0.5, -3)" << std::endl;
+
+    //std::vector<std::shared_ptr<Shape>> test_shapes = { sphere, box };
+    //add_shapes(test_shapes);
+
+    std::function<void(const std::shared_ptr<Shape>&, int)> print_shape_info;
+    print_shape_info = [&print_shape_info](const std::shared_ptr<Shape>& shape, int depth) {
+        for (int i = 0; i < depth; ++i) std::cout << "  ";
+        std::cout << "Shape: " << shape->getName() << std::endl;
+
+        for (int i = 0; i < depth; ++i) std::cout << "  ";
+        std::cout << "Transformation matrix:" << std::endl;
+        auto trans = shape->getWorldTransformation();
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < depth + 1; ++j) std::cout << "  ";
+            for (int j = 0; j < 4; ++j) {
+                std::cout << trans[i][j] << " ";
+            }
+            std::cout << std::endl;
+        }
+
+        if (auto composite = std::dynamic_pointer_cast<Composite>(shape)) {
+            for (const auto& child : composite->getChildren()) {
+                print_shape_info(child, depth + 1);
+            }
+        }
+        };
+
+    print_shape_info(root_shape_, 0);
+
+
+    int total_pixels = width_ * height_;
+    int processed_pixels = 0;
     for (unsigned y = 0; y < height_; ++y) {
         for (unsigned x = 0; x < width_; ++x) {
             Ray ray = generate_primary_ray(x, y);
+            //std::cout << "Generated ray for pixel (" << x << ", " << y << "): "
+            //    << "origin = (" << ray.origin.x << ", " << ray.origin.y << ", " << ray.origin.z << "), "
+            //    << "direction = (" << ray.direction.x << ", " << ray.direction.y << ", " << ray.direction.z << ")" << std::endl;
             Color pixel_color = trace_ray(ray, 5); // Max depth 5
             Pixel p(x, y);
             p.color = pixel_color;
             write(p);
+
+            // Fortschrittsanzeige
+            processed_pixels++;
+            if (processed_pixels % (total_pixels / 100) == 0) {
+                std::cout << "\rRendering progress: " << (processed_pixels * 100 / total_pixels) << "%" << std::flush;
+            }
         }
     }
+
     ppm_.save(filename_);
+    std::cout << "\nRendering completed." << std::endl;
 }
 
 Ray Renderer::generate_primary_ray(unsigned x, unsigned y) {
     float aspect_ratio = static_cast<float>(width_) / static_cast<float>(height_);
     float fov_x_rad = glm::radians(camera_.fov_x);
     float fov_y_rad = 2.0f * std::atan(std::tan(fov_x_rad * 0.5f) / aspect_ratio);
-
     float pixel_x = (2.0f * ((x + 0.5f) / width_) - 1.0f) * std::tan(fov_x_rad * 0.5f);
     float pixel_y = (1.0f - 2.0f * ((y + 0.5f) / height_)) * std::tan(fov_y_rad * 0.5f);
-
     glm::vec3 ray_direction = glm::normalize(camera_.dir + pixel_x * glm::cross(camera_.dir, camera_.up) + pixel_y * camera_.up);
+
+    
+    //std::cout << "Generating primary ray for pixel (" << x << ", " << y << ")" << std::endl;
+    //std::cout << "  Pixel coordinates: (" << pixel_x << ", " << pixel_y << ")" << std::endl;
+    //std::cout << "  Ray direction: (" << ray_direction.x << ", " << ray_direction.y << ", " << ray_direction.z << ")" << std::endl;
 
     return Ray{ camera_.eye, ray_direction };
 }
+
+//Color Renderer::trace_ray(Ray const& ray, int depth) {
+//    if (depth <= 0) {
+//        return Color{ 0.0f, 0.0f, 0.0f };
+//    }
+//    Hitpoint hitpoint = shading_.compute_intersection(ray, root_shape_);
+//    if (hitpoint.hit) {
+//        return shading_.compute_lighting(hitpoint, ray, root_shape_, lights_, depth);
+//    }
+//
+//    // Hintergrundfarbe (z.B. Himmel)
+//    float t = 0.5f * (glm::normalize(ray.direction).y + 1.0f);
+//    return Color{ (1.0f - t) * 1.0f + t * 0.5f, (1.0f - t) * 1.0f + t * 0.7f, (1.0f - t) * 1.0f + t * 1.0f };
+//}
 
 Color Renderer::trace_ray(Ray const& ray, int depth) {
     if (depth <= 0) {
         return Color{ 0.0f, 0.0f, 0.0f };
     }
 
-    Hitpoint hitpoint = shading_.compute_intersection(ray, shapes_);  // Shading kümmert sich um Schnittberechnung
+    Hitpoint hitpoint = shading_.compute_intersection(ray, root_shape_);
 
     if (hitpoint.hit) {
-        return shading_.compute_lighting(hitpoint, ray, shapes_, lights_, depth);  // Shading kümmert sich um Beleuchtung
+        //std::cout << "Hit detected for " << hitpoint.name_obj
+        //    << " at distance " << hitpoint.distance << std::endl;
+        return shading_.compute_lighting(hitpoint, ray, root_shape_, lights_, depth);
+    }
+    else {
+        //std::cout << "No hit detected, returning background color" << std::endl;
     }
 
-    // Hintergrundfarbe (z.B. Himmel)
+    // Hintergrundfarbe
     float t = 0.5f * (glm::normalize(ray.direction).y + 1.0f);
     return Color{ (1.0f - t) * 1.0f + t * 0.5f, (1.0f - t) * 1.0f + t * 0.7f, (1.0f - t) * 1.0f + t * 1.0f };
 }
 
+
+
 void Renderer::write(Pixel const& p) {
     size_t buf_pos = (width_ * p.y + p.x);
     if (buf_pos >= colorbuffer_.size() || buf_pos < 0) {
-        std::cerr << "Fatal Error Renderer::write(Pixel p): pixel out of ppm_: "
-            << p.x << "," << p.y << std::endl;
+        //std::cerr << "Fatal Error Renderer::write(Pixel p): pixel out of ppm_: "
+        //    << p.x << "," << p.y << std::endl;
     }
     else {
         colorbuffer_[buf_pos] = p.color;
     }
-
     ppm_.write(p);
 }
 
+//void Renderer::add_shapes(const std::vector<std::shared_ptr<Shape>>& new_shapes) {
+//    std::cout << "Adding " << new_shapes.size() << " shapes to the root composite" << std::endl;
+//
+//    auto root_composite = std::dynamic_pointer_cast<Composite>(root_shape_);
+//    if (!root_composite) {
+//        std::cout << "Creating new root composite" << std::endl;
+//        root_shape_ = std::make_shared<Composite>("root");
+//        root_composite = std::dynamic_pointer_cast<Composite>(root_shape_);
+//    }
+//
+//    for (const auto& shape : new_shapes) {
+//        std::cout << "Adding shape " << shape->getName() << " to root composite" << std::endl;
+//        root_composite->add(shape);
+//    }
+//
+//    std::cout << "Root composite now has " << root_composite->getChildren().size() << " children" << std::endl;
+//}
+//
+//void Renderer::add_lights(const std::vector<std::shared_ptr<Light>>& new_lights) {
+//    lights_.insert(lights_.end(), new_lights.begin(), new_lights.end());
+//}
+
 void Renderer::add_shapes(const std::vector<std::shared_ptr<Shape>>& new_shapes) {
-    shapes_.insert(shapes_.end(), new_shapes.begin(), new_shapes.end());
+    for (const auto& shape : new_shapes) {
+        //std::cout << "Adding shape to renderer: " << shape->getName() << std::endl;
+        root_shape_->add(shape);
+    }
 }
 
 void Renderer::add_lights(const std::vector<std::shared_ptr<Light>>& new_lights) {
     lights_.insert(lights_.end(), new_lights.begin(), new_lights.end());
+    //std::cout << "Hinzugefügte Lichter: " << new_lights.size() << std::endl;
 }
