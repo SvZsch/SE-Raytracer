@@ -20,5 +20,10 @@ add_executable(tests
   tests.cpp)
 target_link_libraries(tests ${FRAMEWORK_NAME} ${LIBRARIES})
 add_dependencies(tests glfw ${FRAMEWORK_NAME} ${COPY_BINARY})
+
+add_executable(generate_sdf_frames
+  generate_sdf_frames.cpp)
+target_link_libraries(tests ${FRAMEWORK_NAME} ${LIBRARIES})
+add_dependencies(tests glfw ${FRAMEWORK_NAME} ${COPY_BINARY})
  
 
