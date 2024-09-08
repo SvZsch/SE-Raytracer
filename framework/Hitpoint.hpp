@@ -6,6 +6,7 @@
 struct Hitpoint {
 	bool hit{ false };
 	float distance{ 0.0f };
+	float t = 0.0f;
 	std::string name_obj{ "none" };
 	std::shared_ptr<Material> color_obj;
 	glm::vec3 hit_p{ 0.0f, 0.0f, 0.0f };
