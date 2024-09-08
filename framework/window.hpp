@@ -6,80 +6,61 @@
 //
 // Window
 // -----------------------------------------------------------------------------
+#ifndef BUW_WINDOW_HPP             // Beginn der Include-Guard: Verhindert mehrfaches Einbinden dieser Datei
+#define BUW_WINDOW_HPP             // Definition des Include-Guard-Makros
 
-#ifndef BUW_WINDOW_HPP
-#define BUW_WINDOW_HPP
+#include "color.hpp"               // Inkludiert die Farbdefinitionen
+#include <GL/glew.h>               // Inkludiert OpenGL Extension Wrangler Library
+#include <GLFW/glfw3.h>            // Inkludiert GLFW für Fensterverwaltung
+#include <vector>                  // Inkludiert die Standard-Vektor-Bibliothek
+#define GLM_FORCE_RADIANS          // Erzwingt die Verwendung von Radiant in GLM
+#include <glm/vec2.hpp>            // Inkludiert GLM 2D-Vektoren
+#include <glm/vec3.hpp>            // Inkludiert GLM 3D-Vektoren
+#include <glm/gtx/multiple.hpp>    // Inkludiert GLM-Erweiterungen
+#include <array>                   // Inkludiert die Standard-Array-Bibliothek
+#include <string>                  // Inkludiert die Standard-String-Bibliothek
 
-#include "color.hpp"
+struct GLFWwindow;                 // Vorwärtsdeklaration von GLFWwindow
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <vector>
-
-#define GLM_FORCE_RADIANS
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/gtx/multiple.hpp>
-
-#include <array>
-#include <string>
-
-struct GLFWwindow;
-class Window
+class Window                       // Beginn der Window-Klassen-Definition
 {
 public:
-  Window(glm::ivec2 const& window_size = {640, 480});
-  ~Window();
+    Window(glm::ivec2 const& window_size = { 640, 480 }); // Konstruktor mit Standardfenstergröße
+    ~Window();                       // Destruktor
 
-  enum MouseButton
-  {
-    MOUSE_BUTTON_NONE   = 0,
-    MOUSE_BUTTON_LEFT   = (1 << 0),
-    MOUSE_BUTTON_RIGHT  = (1 << 1),
-    MOUSE_BUTTON_MIDDLE = (1 << 2)
-  };
+    enum MouseButton                 // Aufzählung für Maustasten
+    {
+        MOUSE_BUTTON_NONE = 0,       // Keine Maustaste
+        MOUSE_BUTTON_LEFT = (1 << 0),// Linke Maustaste
+        MOUSE_BUTTON_RIGHT = (1 << 1),// Rechte Maustaste
+        MOUSE_BUTTON_MIDDLE = (1 << 2) // Mittlere Maustaste
+    };
 
-  enum KeyAction
-  {
-    KEY_PRESS   = GLFW_PRESS,
-    KEY_RELEASE = GLFW_RELEASE,
-    KEY_REPEAT  = GLFW_REPEAT
-  };
+    enum KeyAction                   // Aufzählung für Tastenaktionen
+    {
+        KEY_PRESS = GLFW_PRESS,      // Taste gedrückt
+        KEY_RELEASE = GLFW_RELEASE,    // Taste losgelassen
+        KEY_REPEAT = GLFW_REPEAT      // Taste gehalten
+    };
 
-
-  glm::vec2 mouse_position() const;
-
-  // is closed flag set
-  bool should_close() const;
-
-  // close window
-  void close();
-
-  // update window
-  void update();
-
-  // test if given key is pressed
-  // See here for key codes:
-  // http://www.glfw.org/docs/latest/group__keys.html
-  int get_key(int key) const;
-  int get_mouse_button(int button) const;
-
-  // current window size
-  glm::ivec2 window_size() const;
-
-  // time elapsed since GLFW was initialized
-  float get_time() const;
-
-  void show(std::vector<Color> const& color_buffer);
+    glm::vec2 mouse_position() const; // Gibt die aktuelle Mausposition zurück
+    bool should_close() const;       // Prüft, ob das Fenster geschlossen werden soll
+    void close();                    // Schließt das Fenster
+    void update();                   // Aktualisiert das Fenster
+    int get_key(int key) const;      // Prüft den Status einer bestimmten Taste
+    int get_mouse_button(int button) const; // Prüft den Status einer bestimmten Maustaste
+    glm::ivec2 window_size() const;  // Gibt die aktuelle Fenstergröße zurück
+    float get_time() const;          // Gibt die verstrichene Zeit seit der GLFW-Initialisierung zurück
+    void show(std::vector<Color> const& color_buffer); // Zeigt den Farbpuffer im Fenster an
 
 private:
-  GLFWwindow*       window_;
-  glm::ivec2        window_size_;
-  glm::ivec2        frame_buffer_size_;
-  std::string const title_;
-  GLuint            vao_     = 0;
-  GLuint            program_ = 0;
-  GLuint            texture_ = 0;
+    GLFWwindow* window_;       // Pointer auf das GLFW-Fenster
+    glm::ivec2        window_size_;  // Fenstergröße
+    glm::ivec2        frame_buffer_size_; // Größe des Framebuffers
+    std::string const title_;        // Fenstertitel
+    GLuint            vao_ = 0;  // Vertex Array Object
+    GLuint            program_ = 0;  // Shader-Programm
+    GLuint            texture_ = 0;  // Textur-Objekt
 };
 
-#endif // define BUW_WINDOW_HPP
+#endif // define BUW_WINDOW_HPP    // Ende der Include-Guard

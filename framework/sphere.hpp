@@ -1,26 +1,30 @@
 // sphere.hpp
-#ifndef SPHERE_HPP
-#define SPHERE_HPP
-#include "shape.hpp"
-#include <glm/vec3.hpp>
-#include "Hitpoint.hpp"
-#include "Ray.hpp"
+#ifndef SPHERE_HPP                 // Beginn der Include-Guard: Verhindert mehrfaches Einbinden dieser Datei
+#define SPHERE_HPP                 // Definition des Include-Guard-Makros
 
-class Sphere : public Shape {
+#include "shape.hpp"               // Inkludiert die Basisklasse Shape
+#include <glm/vec3.hpp>            // Inkludiert GLM-Vektorklasse für 3D-Vektoren
+#include "Hitpoint.hpp"            // Inkludiert die Definitionen für Trefferpunkte
+#include "Ray.hpp"                 // Inkludiert die Definitionen für Strahlen
+
+class Sphere : public Shape {      // Beginn der Sphere-Klassen-Definition, erbt von Shape
 private:
-    /*float rad{ 10.0f };
-    glm::vec3 point{ 100.0f, 100.0f, 100.0f };*/
+
 public:
-    Sphere();
-    ~Sphere();
-    Sphere(float r, glm::vec3 p);
-    Sphere(float r, glm::vec3 p, std::string const& name, std::shared_ptr<Material> const& color);
-    float area() const override;
-    float volume() const override;
-    std::ostream& print(std::ostream& os) const override;
-    float rad{ 10.0f };
-    glm::vec3 point{ 100.0f, 100.0f, 100.0f };
+    Sphere();                      // Standardkonstruktor
+    ~Sphere();                     // Destruktor
+    Sphere(float r, glm::vec3 p);  // Konstruktor mit Radius und Mittelpunkt
+    Sphere(float r, glm::vec3 p, std::string const& name, std::shared_ptr<Material> const& color); // Konstruktor mit Radius, Mittelpunkt, Name und Material
+
+    float area() const override;   // Überschreibt die Methode zur Flächenberechnung
+    float volume() const override; // Überschreibt die Methode zur Volumenberechnung
+    std::ostream& print(std::ostream& os) const override; // Überschreibt die Methode zum Ausgeben der Kugel
+
+    float rad{ 10.0f };            // Radius der Kugel, standardmäßig 10.0
+    glm::vec3 point{ 100.0f, 100.0f, 100.0f }; // Mittelpunkt der Kugel, standardmäßig (100, 100, 100)
+
 protected:
-    Hitpoint intersectImpl(Ray const& ray) const override;
+    Hitpoint intersectImpl(Ray const& ray) const override; // Überschreibt die Methode zur Schnittpunktberechnung
 };
-#endif
+
+#endif                             // Ende der Include-Guard

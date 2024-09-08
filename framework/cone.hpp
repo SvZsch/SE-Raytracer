@@ -1,24 +1,24 @@
 // cone.hpp
-#ifndef CONE_HPP
+#ifndef CONE_HPP                   // Verhindert mehrfaches Einbinden dieser Datei
 #define CONE_HPP
 
-#include "shape.hpp"
+#include "shape.hpp"               // Bindet die Basisklasse Shape ein
 
-class Cone : public Shape {
+class Cone : public Shape {        // Definiert die Cone-Klasse, die von Shape erbt
 public:
-    Cone();
-    Cone(std::string const& name, float radius, float height);
-    Cone(std::string const& name, float radius, float height, std::shared_ptr<Material> const& material);
+    Cone();                        // Standardkonstruktor für einen Kegel
+    Cone(std::string const& name, float radius, float height); // Konstruktor mit Name, Radius und Höhe
+    Cone(std::string const& name, float radius, float height, std::shared_ptr<Material> const& material); // Konstruktor mit zusätzlichem Material
 
-    float area() const override;
-    float volume() const override;
+    float area() const override;   // Berechnet und gibt die Oberfläche des Kegels zurück
+    float volume() const override; // Berechnet und gibt das Volumen des Kegels zurück
 
 protected:
-    Hitpoint intersectImpl(Ray const& ray) const override;
+    Hitpoint intersectImpl(Ray const& ray) const override; // Berechnet den Schnittpunkt eines Strahls mit dem Kegel
 
 private:
-    float radius_;
-    float height_;
+    float radius_;                 // Speichert den Radius des Kegels
+    float height_;                 // Speichert die Höhe des Kegels
 };
 
-#endif // CONE_HPP
+#endif // CONE_HPP                 // Beendet die Schutz vor Mehrfacheinbindung

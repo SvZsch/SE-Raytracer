@@ -1,129 +1,104 @@
 // cone.cpp
-#include "cone.hpp"
-#include "Hitpoint.hpp"
-#include <cmath>
-#include <glm/glm.hpp>
-#include <algorithm>
+#include "cone.hpp"                // Inkludiert die Header-Datei für die Cone-Klasse
+#include "Hitpoint.hpp"            // Inkludiert die Header-Datei für die Hitpoint-Struktur
+#include <cmath>                   // Inkludiert die Standard-Mathematikbibliothek
+#include <glm/glm.hpp>             // Inkludiert die GLM-Bibliothek für Vektoroperationen
+#include <algorithm>               // Inkludiert die Standard-Algorithmusbibliothek
 
-const double M_PI = 3.14159265358979323846;
+const double M_PI = 3.14159265358979323846; // Definiert die Konstante Pi
 
-
-Cone::Cone() : Shape(), radius_(1.0f), height_(1.0f) {
-    //std::cout << "Cone default constructor called" << std::endl;
+Cone::Cone() : Shape(), radius_(1.0f), height_(1.0f) { // Standardkonstruktor, initialisiert Radius und Höhe mit 1.0
+    //std::cout << "Cone default constructor called" << std::endl; // Auskommentierte Debug-Ausgabe
 }
 
-Cone::Cone(std::string const& name, float radius, float height)
-    : Shape(name), radius_(radius), height_(height) {
-    //std::cout << "Cone constructor called: " << name << std::endl;
+Cone::Cone(std::string const& name, float radius, float height) // Konstruktor mit Namen, Radius und Höhe
+    : Shape(name), radius_(radius), height_(height) { // Initialisiert die Basisklasse und die Member-Variablen
+    //std::cout << "Cone constructor called: " << name << std::endl; // Auskommentierte Debug-Ausgabe
 }
 
-Cone::Cone(std::string const& name, float radius, float height, std::shared_ptr<Material> const& material)
-    : Shape(name, material), radius_(radius), height_(height) {
-    //std::cout << "Cone constructor with material called: " << name << std::endl;
-    setMaterial(material);  // Explizit das Material setzen
-    if (material) {
-        //std::cout << "Material set: " << material->name << std::endl;
+Cone::Cone(std::string const& name, float radius, float height, std::shared_ptr<Material> const& material) // Konstruktor mit Namen, Radius, Höhe und Material
+    : Shape(name, material), radius_(radius), height_(height) { // Initialisiert die Basisklasse und die Member-Variablen
+    //std::cout << "Cone constructor with material called: " << name << std::endl; // Auskommentierte Debug-Ausgabe
+    setMaterial(material);  // Setzt das Material explizit
+    if (material) { // Wenn ein Material übergeben wurde
+        //std::cout << "Material set: " << material->name << std::endl; // Auskommentierte Debug-Ausgabe
     }
-    else {
-        //std::cout << "Warning: Null material provided for Cone " << name << std::endl;
+    else { // Wenn kein Material übergeben wurde
+        //std::cout << "Warning: Null material provided for Cone " << name << std::endl; // Auskommentierte Debug-Ausgabe
     }
 }
 
-float Cone::area() const {
-    return M_PI * radius_ * (radius_ + std::sqrt(height_ * height_ + radius_ * radius_));
+float Cone::area() const { // Methode zur Berechnung der Oberfläche des Kegels
+    return M_PI * radius_ * (radius_ + std::sqrt(height_ * height_ + radius_ * radius_)); // Berechnet und gibt die Oberfläche zurück
 }
 
-float Cone::volume() const {
-    return (1.0f / 3.0f) * M_PI * radius_ * radius_ * height_;
+float Cone::volume() const { // Methode zur Berechnung des Volumens des Kegels
+    return (1.0f / 3.0f) * M_PI * radius_ * radius_ * height_; // Berechnet und gibt das Volumen zurück
 }
 
-// In cone.cpp
-Hitpoint Cone::intersectImpl(Ray const& ray) const {
-    Hitpoint result;
+Hitpoint Cone::intersectImpl(Ray const& ray) const { // Implementierung der Schnittpunktberechnung
+    Hitpoint result; // Erstellt ein Hitpoint-Objekt zur Speicherung des Ergebnisses
+    glm::vec3 co = ray.origin - glm::vec3(0, 0, 0);  // Berechnet den Vektor vom Kegelursprung zum Strahlursprung
+    glm::vec3 dir = glm::normalize(ray.direction); // Normalisiert die Richtung des Strahls
+    float k = radius_ / height_; // Berechnet den Tangens des halben Öffnungswinkels
+    float k2 = k * k; // Berechnet das Quadrat von k
 
-    // Transformiere den Strahl in das lokale Koordinatensystem des Kegels
-    glm::vec3 co = ray.origin - glm::vec3(0, 0, 0);  // Kegel-Ursprung ist jetzt an (0,0,0)
-    glm::vec3 dir = glm::normalize(ray.direction);
+    // Berechnung für die Mantelfläche
+    float a = dir.x * dir.x + dir.z * dir.z - k2 * dir.y * dir.y; // Berechnet den Koeffizienten a der quadratischen Gleichung
+    float b = 2 * (co.x * dir.x + co.z * dir.z - k2 * co.y * dir.y + k2 * height_ * dir.y); // Berechnet den Koeffizienten b
+    float c = co.x * co.x + co.z * co.z - k2 * (co.y * co.y - 2 * height_ * co.y + height_ * height_); // Berechnet den Koeffizienten c
+    float discriminant = b * b - 4 * a * c; // Berechnet die Diskriminante
+    float t_mantle = std::numeric_limits<float>::max(); // Initialisiert t_mantle mit dem größtmöglichen Float-Wert
 
-    float k = radius_ / height_;
-    float k2 = k * k;
+    if (std::abs(a) > 1e-6 && discriminant >= 0) { // Prüft, ob eine Lösung existiert
+        float sqrt_discriminant = std::sqrt(discriminant); // Berechnet die Wurzel der Diskriminante
+        float t1 = (-b - sqrt_discriminant) / (2 * a); // Berechnet die erste Lösung
+        float t2 = (-b + sqrt_discriminant) / (2 * a); // Berechnet die zweite Lösung
+        if (t1 > t2) std::swap(t1, t2); // Sortiert t1 und t2, sodass t1 <= t2
 
-    float a = dir.x * dir.x + dir.z * dir.z - k2 * dir.y * dir.y;
-    float b = 2 * (co.x * dir.x + co.z * dir.z - k2 * co.y * dir.y + k2 * height_ * dir.y);
-    float c = co.x * co.x + co.z * co.z - k2 * (co.y * co.y - 2 * height_ * co.y + height_ * height_);
-
-    float discriminant = b * b - 4 * a * c;
-
-    if (std::abs(a) < 1e-6 || discriminant < 0) {
-        return result;  // Kein Schnittpunkt
+        auto check_mantle = [&](float t_check) { // Lambda-Funktion zur Überprüfung des Mantelschnittpunkts
+            if (t_check > 0) { // Wenn t_check positiv ist
+                glm::vec3 p = co + t_check * dir; // Berechnet den Schnittpunkt
+                if (p.y >= 0 && p.y <= height_) { // Wenn der Schnittpunkt innerhalb der Kegelhöhe liegt
+                    return t_check; // Gibt t_check zurück
+                }
+            }
+            return std::numeric_limits<float>::max(); // Gibt den größtmöglichen Float-Wert zurück, wenn kein gültiger Schnittpunkt gefunden wurde
+            };
+        t_mantle = std::min(check_mantle(t1), check_mantle(t2)); // Wählt den näheren gültigen Schnittpunkt
     }
 
-    float sqrt_discriminant = std::sqrt(discriminant);
-    float t1 = (-b - sqrt_discriminant) / (2 * a);
-    float t2 = (-b + sqrt_discriminant) / (2 * a);
-
-    // Sortiere t1 und t2, sodass t1 <= t2
-    if (t1 > t2) std::swap(t1, t2);
-
-    // Prüfe auch den Schnitt mit der Grundfläche
-    float t_base = -co.y / dir.y;
-
-    float t = std::numeric_limits<float>::max();
-    glm::vec3 normal;
-    bool hit_base = false;
-
-    // Prüfe Mantelfläche
-    auto check_mantle = [&](float t_check) {
-        if (t_check > 0) {
-            glm::vec3 p = co + t_check * dir;
-            if (p.y >= 0 && p.y <= height_) {
-                t = t_check;
-                return true;
+    // Berechnung für die Basis
+    float t_base = std::numeric_limits<float>::max(); // Initialisiert t_base mit dem größtmöglichen Float-Wert
+    if (std::abs(dir.y) > 1e-6) { // Prüft, ob der Strahl nicht parallel zur Basis ist
+        float t = -co.y / dir.y; // Berechnet den t-Wert für den Schnittpunkt mit der Basisebene
+        if (t > 0) { // Wenn t positiv ist
+            glm::vec3 p = co + t * dir; // Berechnet den Schnittpunkt
+            if (p.x * p.x + p.z * p.z <= radius_ * radius_) { // Wenn der Schnittpunkt innerhalb des Basiskreises liegt
+                t_base = t; // Setzt t_base auf t
             }
         }
-        return false;
-        };
+    }
 
-    // Prüfe zuerst t1, dann t2
-    if (check_mantle(t1)) {
-        // Erster Schnittpunkt ist gültig
-    }
-    else if (check_mantle(t2)) {
-        // Zweiter Schnittpunkt ist gültig
-    }
-    else if (t_base > 0 && t_base < t) {
-        // Prüfe Grundfläche
-        glm::vec3 p = co + t_base * dir;
-        if (p.x * p.x + p.z * p.z <= radius_ * radius_) {
-            t = t_base;
-            hit_base = true;
+    // Wählt den näheren Schnittpunkt zwischen Mantel und Basis
+    float t = std::min(t_mantle, t_base); // Wählt den kleineren Wert von t_mantle und t_base
+    if (t < std::numeric_limits<float>::max()) { // Wenn ein gültiger Schnittpunkt gefunden wurde
+        result.hit = true; // Setzt hit auf true
+        result.distance = t; // Setzt die Distanz auf t
+        result.hit_p = ray.origin + t * dir; // Berechnet den Schnittpunkt
+        if (t == t_base) { // Wenn der Schnittpunkt auf der Basis liegt
+            result.normal = glm::vec3(0, -1, 0); // Setzt die Normale auf (0, -1, 0)
         }
-    }
-
-    if (t < std::numeric_limits<float>::max()) {
-        result.hit = true;
-        result.distance = t;
-        result.hit_p = ray.origin + t * dir;
-
-        if (hit_base) {
-            normal = glm::vec3(0, -1, 0);
-        }
-        else {
-            // Berechne die Normale für die Mantelfläche
-            float y = result.hit_p.y;
-            float r = std::sqrt(result.hit_p.x * result.hit_p.x + result.hit_p.z * result.hit_p.z);
-            normal = glm::normalize(glm::vec3(result.hit_p.x, r * k, result.hit_p.z));
-
-            // Behandlung der Kegelspitze
-            if (y >= height_ - 1e-4f) {
-                normal = glm::vec3(0, 1, 0);
+        else { // Wenn der Schnittpunkt auf der Mantelfläche liegt
+            float y = result.hit_p.y; // Extrahiert die y-Koordinate des Schnittpunkts
+            float r = std::sqrt(result.hit_p.x * result.hit_p.x + result.hit_p.z * result.hit_p.z); // Berechnet den Radius an der Schnittpunkthöhe
+            result.normal = glm::normalize(glm::vec3(result.hit_p.x, r * k, result.hit_p.z)); // Berechnet und normalisiert die Normale
+            if (y >= height_ - 1e-4f) { // Wenn der Schnittpunkt nahe der Kegelspitze liegt
+                result.normal = glm::vec3(0, 1, 0); // Setzt die Normale auf (0, 1, 0)
             }
         }
-
-        result.normal = normal;
-        result.color_obj = material_;
-        result.name_obj = getName();
+        result.color_obj = material_; // Setzt das Material des Trefferpunkts
+        result.name_obj = getName(); // Setzt den Namen des getroffenen Objekts
     }
-
-    return result;
+    return result; // Gibt das Hitpoint-Objekt zurück
 }

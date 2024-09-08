@@ -6,11 +6,10 @@
 //
 // Fensterchen
 // -----------------------------------------------------------------------------
-
-#ifndef BUW_FENSTERCHEN_HPP
+#ifndef BUW_FENSTERCHEN_HPP        // Verhindert mehrfaches Einbinden dieser Datei
 #define BUW_FENSTERCHEN_HPP
 
-#include "color.hpp"
-#include "window.hpp"
+#include "color.hpp"               // Bindet die Farbdefinitionen ein
+#include "window.hpp"              // Bindet die Fensterdefinitionen ein
 
-#endif // BUW_FENSTERCHEN_HPP
+#endif // BUW_FENSTERCHEN_HPP      // Beendet die Schutz vor Mehrfacheinbindung

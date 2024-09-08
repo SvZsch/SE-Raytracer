@@ -1,38 +1,19 @@
-////Aufgabe 7 hinzugefügt
-//
-//#ifndef LIGHT_HPP
-//#define LIGHT_HPP
-//
-//#include <glm/vec3.hpp>
-//#include "color.hpp"
-//
-//class Light {
-//public:
-//    Light(glm::vec3 const& pos, Color const& col)
-//        : position(pos), color(col) {}
-//
-//    glm::vec3 position;
-//    Color color;
-//};
-//
-//#endif // LIGHT_HPP
-
 // Light.hpp
-#ifndef LIGHT_HPP
+#ifndef LIGHT_HPP                  // Verhindert mehrfaches Einbinden dieser Datei
 #define LIGHT_HPP
 
-#include <glm/vec3.hpp>
-#include "color.hpp"
-#include <string>
+#include <glm/vec3.hpp>            // Für 3D-Vektoren
+#include "color.hpp"               // Bindet Farbdefinitionen ein
+#include <string>                  // Für string-Objekte
 
-struct Light
+struct Light                       // Definiert eine Struktur für Lichtquellen
 {
-    glm::vec3 position;
-    Color color;
-    std::string name;
+    glm::vec3 position;            // Position der Lichtquelle im 3D-Raum
+    Color color;                   // Farbe des Lichts
+    std::string name;              // Name der Lichtquelle
 
     Light(glm::vec3 const& pos, Color const& col, std::string const& n = "default_light")
-        : position(pos), color(col), name(n) {}
+        : position(pos), color(col), name(n) {} // Konstruktor zur Initialisierung aller Licht-Eigenschaften
 };
 
-#endif
+#endif                             // Beendet die Schutz vor Mehrfacheinbindung

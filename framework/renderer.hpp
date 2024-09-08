@@ -1,111 +1,44 @@
-//// -----------------------------------------------------------------------------
-//// Copyright  : (C) 2014-2017 Andreas-C. Bernstein
-//// License    : MIT (see the file LICENSE)
-//// Maintainer : Andreas-C. Bernstein <andreas.bernstein@uni-weimar.de>
-//// Stability  : experimental
-////
-//// Renderer
-//// -----------------------------------------------------------------------------
-//
-//#ifndef BUW_RENDERER_HPP
-//#define BUW_RENDERER_HPP
-//
-//#include "color.hpp"
-//#include "shape.hpp"
-//#include "light.hpp"
-//#include "pixel.hpp"
-//#include "ppmwriter.hpp"
-//#include "ray.hpp"
-//#include "hitpoint.hpp"
-//#include "camera.hpp"
-//#include <string>
-//#include <glm/glm.hpp>
-//#include <vector>
-//#include <memory>
-//
-//class Renderer
-//{
-//public:
-//    Renderer(unsigned w, unsigned h, std::string const& file, Camera const& cam);
-//
-//    void render();
-//    void write(Pixel const& p);
-//
-//    inline std::vector<Color> const& color_buffer() const {
-//        return color_buffer_;
-//    }
-//
-//    void add_shapes(const std::vector<std::shared_ptr<Shape>>& new_shapes) {
-//        shapes_.insert(shapes_.end(), new_shapes.begin(), new_shapes.end());
-//    }
-//
-//    void add_lights(const std::vector<std::shared_ptr<Light>>& new_lights) {
-//        lights_.insert(lights_.end(), new_lights.begin(), new_lights.end());
-//    }
-//
-//
-//private:
-//    unsigned width_;
-//    unsigned height_;
-//    std::vector<Color> color_buffer_;
-//    std::string filename_;
-//    PpmWriter ppm_;
-//    Camera camera_;
-//
-//    // Methoden für Raytracing hinzugefügt
-//    Ray generate_primary_ray(unsigned x, unsigned y);
-//    Color trace_ray(Ray const& ray, int depth, std::vector<std::shared_ptr<Shape>> const& shapes, std::vector<std::shared_ptr<Light>> const& lights);
-//    Hitpoint compute_intersection(Ray const& ray, std::vector<std::shared_ptr<Shape>> const& shapes);
-//    Color compute_color(Hitpoint const& hitpoint, std::vector<std::shared_ptr<Light>> const& lights);
-//    Color blend_colors(Color c1, Color c2, float weight1, float weight2);
-//
-//    std::vector<std::shared_ptr<Shape>> shapes_;
-//    std::vector<std::shared_ptr<Light>> lights_;
-//
-//};
-//
-//#endif // #ifndef BUW_RENDERER_HPP
-
 // renderer.hpp
-#ifndef BUW_RENDERER_HPP
+#ifndef BUW_RENDERER_HPP           // Verhindert mehrfaches Einbinden dieser Datei
 #define BUW_RENDERER_HPP
 
-#include "color.hpp"
-#include "shape.hpp"
-#include "light.hpp"
-#include "pixel.hpp"
-#include "ppmwriter.hpp"
-#include "ray.hpp"
-#include "hitpoint.hpp"
-#include "camera.hpp"
-#include "shade.hpp"
-#include <string>
-#include <glm/glm.hpp>
-#include <vector>
-#include <memory>
+#include "color.hpp"               // Bindet Farbdefinitionen ein
+#include "shape.hpp"               // Bindet Formdefinitionen ein
+#include "light.hpp"               // Bindet Lichtdefinitionen ein
+#include "pixel.hpp"               // Bindet Pixeldefinitionen ein
+#include "ppmwriter.hpp"           // Bindet PPM-Schreiber ein
+#include "ray.hpp"                 // Bindet Strahlendefinitionen ein
+#include "hitpoint.hpp"            // Bindet Trefferpunktdefinitionen ein
+#include "camera.hpp"              // Bindet Kameradefinitionen ein
+#include "shade.hpp"               // Bindet Schattierungsdefinitionen ein
+#include <string>                  // Für string-Objekte
+#include <glm/glm.hpp>             // Für mathematische Operationen
+#include <vector>                  // Für vector-Container
+#include <memory>                  // Für smart pointers
 
 class Renderer {
 public:
-    Renderer(unsigned w, unsigned h, std::string const& file, Camera const& cam);
-    void render();
-    void write(Pixel const& p);
-    inline std::vector<Color> const& color_buffer() const { return colorbuffer_; }
-    void add_shapes(const std::vector<std::shared_ptr<Shape>>& new_shapes);
-    // renderer.hpp (Fortsetzung)
-    void add_lights(const std::vector<std::shared_ptr<Light>>& new_lights);
+    Renderer(unsigned w, unsigned h, std::string const& file, Camera const& cam); // Konstruktor
+    void render();                 // Rendert die Szene
+    void write(Pixel const& p);    // Schreibt ein Pixel in den Puffer
+    inline std::vector<Color> const& color_buffer() const { return colorbuffer_; } // Gibt den Farbpuffer zurück
+    void add_shapes(const std::vector<std::shared_ptr<Shape>>& new_shapes); // Fügt Formen zur Szene hinzu
+    void add_lights(const std::vector<std::shared_ptr<Light>>& new_lights); // Fügt Lichter zur Szene hinzu
 
 private:
-    unsigned width_;
-    unsigned height_;
-    std::vector<Color> colorbuffer_;
-    std::string filename_;
-    PpmWriter ppm_;
-    Camera camera_;
-    Shading shading_;
-    Ray generate_primary_ray(unsigned x, unsigned y);
-    Color trace_ray(Ray const& ray, int depth);
-    std::shared_ptr<Shape> root_shape_;  // Geändert von std::vector<std::shared_ptr<Shape>> shapes_
-    std::vector<std::shared_ptr<Light>> lights_;
+    unsigned width_;               // Breite des Bildes
+    unsigned height_;              // Höhe des Bildes
+    std::vector<Color> colorbuffer_; // Speichert die Farben der gerenderten Pixel
+    std::string filename_;         // Name der Ausgabedatei
+    PpmWriter ppm_;                // PPM-Schreiber für die Ausgabe
+    Camera camera_;                // Kamera für die Szene
+    Shading shading_;              // Schattierungsmodul
+
+    Ray generate_primary_ray(unsigned x, unsigned y); // Erzeugt einen primären Strahl für ein Pixel
+    Color trace_ray(Ray const& ray, int depth); // Verfolgt einen Strahl durch die Szene
+
+    std::shared_ptr<Shape> root_shape_;  // Wurzel der Szenenhierarchie
+    std::vector<std::shared_ptr<Light>> lights_; // Liste aller Lichtquellen in der Szene
 };
 
-#endif // #ifndef BUW_RENDERER_HPP
+#endif // #ifndef BUW_RENDERER_HPP // Beendet die Schutz vor Mehrfacheinbindung
